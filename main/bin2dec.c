@@ -25,3 +25,11 @@ int main()
     return 0;
 }
 /* end of bin2dec.c */
+
+/* OUTPUT
+
+Binary Number?
+101011
+= 43 (decimal)
+
+*/
