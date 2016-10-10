@@ -46,9 +46,3 @@ int main()
     return 0;
 }
 /* end of client.c */
-
-/* OUTPUT
-
-
-
-*/
