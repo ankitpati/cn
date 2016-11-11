@@ -5,24 +5,41 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
+#define DEFAULT_HOST "127.0.0.1"
+#define DEFAULT_PORT 1234
+
 void exit_error(char *call)
 {
-    fprintf(stderr, "server: %s(2) failed!\n", call);
+    fprintf(stderr, "client: %s(2) failed!\n", call);
     perror("client");
     exit(errno);
 }
 
-int main()
+int main(int argc, char **argv)
 {
     ssize_t i, bytes;
-    int sd;
-    char buf[80];
+    int sd, port = DEFAULT_PORT;
+    char buf[80], *host = DEFAULT_HOST;
     struct sockaddr_in addr;
+
+    switch(argc) {
+    case 3:
+        port = atoi(argv[2]);
+    case 2:
+        host = argv[1];
+    case 1: /* intended fall-through */
+        break;
+    default:
+        fprintf(stderr, "Usage:\n\tclient [host] [port]\n");
+        exit(1);
+        break;
+    }
 
     puts("CLIENT\n");
 
@@ -30,11 +47,20 @@ int main()
         exit_error("socket");
 
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(1234);
-    inet_aton("127.0.0.1", &addr.sin_addr);
+    addr.sin_port = htons(port);
+    inet_aton(host, &addr.sin_addr);
 
     if(connect(sd, (struct sockaddr *) &addr, sizeof(addr)))
         exit_error("connect");
+
+    if(!fork()) {
+        for(;;) {
+            fgets(buf, 80, stdin);
+            bytes = send(sd, buf, strlen(buf), 0);
+            if(bytes != (ssize_t) strlen(buf)) exit_error("send");
+        }
+        exit(0);
+    }
 
     do {
         bytes = recv(sd, buf, 80, 0);
