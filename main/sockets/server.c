@@ -32,8 +32,8 @@ void exit_error(char *call)
 int main(int argc, char **argv)
 {
     ssize_t i, bytes;
-    int sd, con_sd, port = DEFAULT_PORT, backlog = DEFAULT_BACKLOG, pfd[5][2];
-    char buf[80];
+    int sd, con_sd, port = DEFAULT_PORT, backlog = DEFAULT_BACKLOG, *pfd;
+    char svname[80], buf[80];
     socklen_t addrlen;
     struct sockaddr_in addr;
 
@@ -51,6 +51,12 @@ int main(int argc, char **argv)
     }
 
     puts("SERVER\n");
+
+    puts("Server ID?");
+    fgets(svname, 70, stdin);
+    putchar('\n');
+    svname[strlen(svname) - 1] = '\0';
+    strcat(svname, ": ");
 
     if((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
         exit_error("socket");
@@ -87,8 +93,11 @@ int main(int argc, char **argv)
 
             for(;;) {
                 fgets(buf, 80, stdin);
-                bytes = send(con_sd, buf, strlen(buf), 0);
-                if(bytes != (ssize_t) strlen(buf)) exit_error("send");
+                if(send(con_sd, svname, strlen(svname), 0)
+                                                    != (ssize_t) strlen(svname))
+                    exit_error("send");
+                if(send(con_sd, buf, strlen(buf), 0) != (ssize_t) strlen(buf))
+                    exit_error("send");
             }
 
             close(con_sd);

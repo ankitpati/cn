@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 {
     ssize_t i, bytes;
     int sd, port = DEFAULT_PORT;
-    char buf[80], *host = DEFAULT_HOST;
+    char clname[80], buf[80], *host = DEFAULT_HOST;
     struct sockaddr_in addr;
 
     switch(argc) {
@@ -43,6 +43,12 @@ int main(int argc, char **argv)
 
     puts("CLIENT\n");
 
+    puts("Client ID?");
+    fgets(clname, 70, stdin);
+    putchar('\n');
+    clname[strlen(clname) - 1] = '\0';
+    strcat(clname, ": ");
+
     if((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
         exit_error("socket");
 
@@ -56,8 +62,10 @@ int main(int argc, char **argv)
     if(!fork()) {
         for(;;) {
             fgets(buf, 80, stdin);
-            bytes = send(sd, buf, strlen(buf), 0);
-            if(bytes != (ssize_t) strlen(buf)) exit_error("send");
+            if(send(sd, clname, strlen(clname), 0) != (ssize_t) strlen(clname))
+                exit_error("send");
+            if(send(sd, buf, strlen(buf), 0) != (ssize_t) strlen(buf))
+                exit_error("send");
         }
         exit(0);
     }
